@@ -1,2 +1,2 @@
 # Weather_Chimes
- An IoT-based windless garden chime.
+ A CircuitPython _synthio_ and IoT-based _windless_ garden chime.
