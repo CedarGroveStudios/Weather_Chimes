@@ -6,14 +6,17 @@
 ===============================================================================
 A CircuitPython class for generating wind chime and bell sounds for synthio.
 
-Acknowledgement and thanks to: Lee Hite, 'Tubular Bell Chimes Design Handbook'
-for the analysis of tubular chime physics and overtones; C. McKenzie,
-T. Schweisinger, and J. Wagner, 'A Mechanical Engineering Laboratory Experiment
-to Investigate the Frequency Analysis of Bells and Chimes with Assessment' for
-the analysis of bell overtones.
+Acknowledgement and thanks to:
+Lee Hite, 'Tubular Bell Chimes Design Handbook' for the analysis of tubular
+chime physics and overtones.
+C. McKenzie, T. Schweisinger, and J. Wagner, 'A Mechanical Engineering
+Laboratory Experiment to Investigate the Frequency Analysis of Bells and Chimes
+with Assessment' for the analysis of bell overtones.
+
 Special thanks to Liz Clark, 'Circle of Fifths Euclidean Synth with synthio and
-CircuitPython' for the waveform and noise methods. And to Jeff Epler for the
-comprehensive design and implementation of the amazing synthio module.
+CircuitPython' for the waveform and noise methods.
+Appreciation to Jeff Epler for the comprehensive design and implementation of
+the amazing CircuitPython synthio module.
 
 * Author(s): JG for Cedar Grove Maker Studios
 
@@ -28,19 +31,16 @@ Implementation Notes
   https://circuitpython.org/downloads
 """
 
-import time
 import synthio
-import random
 import ulab.numpy as np
-from simpleio import map_range
 from cedargrove_midi_tools import name_to_note
 
 
 class Voice:
     """The pre-compiled synth voices. Bell is a single-capped tube
-    with emperical overtones. Perfect is a dual-capped tube with algorithmically
+    with empirical overtones. Perfect is a dual-capped tube with algorithmically
     generated overtones equal to the length-related harmonics. Tubular is a
-    traditional open-ended tube chime with emperical non-harmonic overtones."""
+    traditional open-ended tube chime with empirical non-harmonic overtones."""
 
     Bell = "bell"
     Perfect = "perfect"
@@ -100,12 +100,12 @@ class Overtones:
     Overtones.Chime[1]. To avoid note distortion, the sum of overtone amplitude
     factors should equal 1.0 or less."""
 
-    """Bell overtones were measured emperically but fall close to the
+    """Bell overtones were measured empirically but fall close to the
     theoretical single-capped tubular harmonics where overtones are the
     odd harmonics."""
     Bell = [(1.00, 0.8), (1.48, 0.19), (1.35, 0.01), (1.72, 0.0)]
 
-    """Perfect overtones are the theoretical harmonics of a dual-capped tube."""
+    """Perfect overtones: the theoretical harmonics of a dual-capped tube."""
     Perfect = [
         (1.00, 0.6),
         (2.00, 0.2),
@@ -116,7 +116,7 @@ class Overtones:
         (7.00, 0.0),
     ]
 
-    """Tubular overtones were measured emperically; they are not equal to
+    """Tubular overtones were measured empirically; they are not equal to
     theoretical dual-capped tubular overtones or harmonics."""
     Tubular = [
         (1.00, 0.6),
@@ -127,8 +127,6 @@ class Overtones:
         (18.64, 0.0),
         (31.87, 0.0),
     ]
-
-
 
 
 class Chime:
@@ -182,8 +180,8 @@ class Chime:
         if self._debug:
             print(f"scale={scale} self._scale={self._scale} list created")
 
-        # Create a single-cycle (one-lambda) sine waveform table to act as
-        #  the oscillator
+        """Create a single-cycle (one-lambda) sine waveform table to act as
+        the oscillator."""
         wave_size = 128  # 512 recommended by todbot
         wave_rate = 11020  # 22050 recommended by todbot
         wave_max_value = int(self._loudness * 31000)  # 0-32767 (signed 16-bit)
@@ -210,32 +208,33 @@ class Chime:
         """Returns the current loudness value."""
         return self._loudness
 
-    def strike(self, root_note=69, note_amplitude=0):
+    def strike(self, root_note=69, amplitude=0):
         """Strike the chime or bell. The midi root_note integer ranges from 0 to 128.
         The note_amplitude is a floating point value between 0 and 1.0. The note envelope
         and overtone values are determined by the chime/bell and striker materials."""
 
         root_note_freq = synthio.midi_to_hz(root_note)
+        adjusted_amplitude = amplitude * self._loudness
 
         self._notes = (
             synthio.Note(
                 root_note_freq * self._overtones[0][0],
-                amplitude=note_amplitude * self._overtones[0][1] * self._loudness,
+                amplitude=adjusted_amplitude * self._overtones[0][1],
                 envelope=self._note_envelope,
             ),
             synthio.Note(
                 root_note_freq * self._overtones[1][0],
-                amplitude=note_amplitude * self._overtones[1][1]* self._loudness,
+                amplitude=adjusted_amplitude * self._overtones[1][1],
                 envelope=self._note_envelope,
             ),
             synthio.Note(
                 root_note_freq * self._overtones[2][0],
-                amplitude=note_amplitude * self._overtones[2][1]* self._loudness,
+                amplitude=adjusted_amplitude * self._overtones[2][1],
                 envelope=self._note_envelope,
             ),
             synthio.Note(
                 root_note_freq * self._overtones[3][0],
-                amplitude=note_amplitude * self._overtones[3][1]* self._loudness,
+                amplitude=adjusted_amplitude * self._overtones[3][1],
                 envelope=self._note_envelope,
             ),
         )
