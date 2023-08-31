@@ -4,7 +4,7 @@
 """
 `cedargrove_chime`
 ===============================================================================
-A CircuitPython class for generating wind chime and bell sounds for synthio.
+A CircuitPython class for generating wind chime and bell sounds using synthio.
 
 Acknowledgement and thanks to:
 Lee Hite, 'Tubular Bell Chimes Design Handbook' for the analysis of tubular
