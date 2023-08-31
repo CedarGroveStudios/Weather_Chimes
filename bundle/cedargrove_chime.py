@@ -15,7 +15,7 @@ with Assessment' for the analysis of bell overtones.
 
 Special thanks to Liz Clark, 'Circle of Fifths Euclidean Synth with synthio and
 CircuitPython' for the waveform and noise methods.
-Appreciation to Jeff Epler for the comprehensive design and implementation of
+Also, thanks to Jeff Epler for the comprehensive design and implementation of
 the amazing CircuitPython synthio module.
 
 * Author(s): JG for Cedar Grove Maker Studios
