@@ -64,15 +64,9 @@ class WindColors:
 
 
 WIFI_DEBUG = False
-BELLS_DEBUG = False
-CHIME_DEBUG = False
 
 LOUDNESS = 0.8
 SCALE_1 = Scale.HarryDavidPear
-SCALE_OFFSET_1 = 0
-VOICE_1 = Voice.Tubular
-MATERIAL_1 = Material.SteelEMT
-STRIKER_1 = Striker.Metal
 
 # Specify LED brightness level
 LED_BRIGHT = 0.15
@@ -108,23 +102,14 @@ mixer.voice[0].level = 0.8
 chime = Chime(
     mixer.voice[0],
     scale=SCALE_1,
-    voice=VOICE_1,
-    material=MATERIAL_1,
-    striker=STRIKER_1,
-    scale_offset=SCALE_OFFSET_1,
-    loudness=LOUDNESS,
-    debug=CHIME_DEBUG,
 )
 
 """bells = Chime(
     mixer.voice[1],
     scale=SCALE_2,
-    voice=VOICE_2,
-    material=MATERIAL_1,
-    striker=STRIKER_1,
-    scale_offset=SCALE_OFFSET_1,
-    loudness=LOUDNESS,
-    debug=CHIME_DEBUG,
+    voice=Voice.Bell,
+    material=MATERIAL_2,
+    striker=STRIKER_2,
 )"""
 
 # Sequentially play all the notes in the scale

@@ -29,6 +29,9 @@ Implementation Notes
 * ESP-32-S2 Feather
 
 **Software and Dependencies:**
+* CedarGrove CircuitPython_MIDI_Tools:
+  https://github.com/CedarGroveStudios/CircuitPython_MIDI_Tools
+  and in the CircuitPython Community Bundle
 * Adafruit CircuitPython firmware for the supported boards:
   https://circuitpython.org/downloads
 """
@@ -39,7 +42,7 @@ from cedargrove_midi_tools import name_to_note
 
 
 class Voice:
-    """The pre-defined synth voices. Bell is a single-capped tube
+    """The predefined synth voices. Bell is a single-capped tube
     with empirical overtones. Perfect is a dual-capped tube with algorithmically
     generated overtones equal to the length-related harmonics. Tubular is a
     traditional open-ended tube chime with empirical non-harmonic overtones."""
@@ -70,7 +73,14 @@ class Scale:
     HappyBirthday = ["C6", "D6", "E6", "F6", "G6", "A6", "A#6", "B6", "C7"]
 
     # Other wind chimes measured in-field
-    HarryDavidPear = ["F#5", "G#5", "B5", "C6", "E6", "G6"]  # material = steel, voice = tubular
+    HarryDavidPear = [
+        "F#5",
+        "G#5",
+        "B5",
+        "C6",
+        "E6",
+        "G6",
+    ]  # material = steel, voice = tubular
     CeramicTurtles = []  # material = ceramic, voice = bell
     BiPlane = []  # material = copper, voice = tubular
 
@@ -148,36 +158,36 @@ class Chime:
         """Create the chime oscillator waveform, note envelope, overtones,
         scale, and instantiate the synthesizer.
 
-        param: audio, ?: An instantiated audio object to receive the output
+        :param bus audio: An instantiated audio object to receive the output
         audio stream, typically an I2S connection, analog DAC output pin, or
         PWM output pin. No default.
-        param: scale, list: The list of playable chime notes in Scientific
+        :param list scale: The list of playable chime notes in Scientific
         Pitch Notation (SPN). Each element of the list is a single SPN string,
         such as “A#4” for the A# for Bb note in the fourth octave. The
         Chime.Scale class contains a number of chime scale lists. Defaults to
         Scale.CNine.
-        param: material, list: A list of chime material note envelope
+        :param list material: A list of chime material note envelope
         parameters for attack time, attack level, and release time. The
         Chime.Material class consists of presets for a variety of materials.
         Defaults to Material.SteelEMT.
-        param: striker, list: A list of striker material note envelope
+        :param list striker: A list of striker material note envelope
         parameter ratios for attack time and attack level. The ratios are used
         to adjust chime material note envelope properties for a particular
         striker material. The Chime.Striker class consists of presets for a
         variety of materials. Defaults to Striker.Metal.
-        param: voice, string: A string representing the pre-defined synth
+        :param str voice: A string representing the pre-defined synth
         voices. The Chime.Voice class contains presets for Voice.Bell (“bell”,
         a single-capped tube with empirical overtones), Voice.Perfect
         (“perfect”, a dual-capped tube with algorithmically generated overtones
         equal to the length-related harmonics), and Voice.Tubular (“tubular”,
         a traditional open-ended tube chime with empirical non-harmonic
         overtones). Defaults to Voice.Tubular.
-        param: scale_offset, int: A positive or negative integer value of note
+        :param int scale_offset: A positive or negative integer value of note
         pitch half-steps to offset the pitch of the scale. Defaults to 0 (no
         scale pitch offset).
-        param: loudness, float: A normalized floating point value for output
+        :param float loudness: A normalized floating point value for output
         amplitude, ranging from 0.0 to 1.0. Defaults to 0.5 (one-half volume).
-        param: debug, bool: A boolean value to enable debug print messages.
+        :param bool debug: A boolean value to enable debug print messages.
         Defaults to False (no debug print messages).
         """
 
@@ -197,7 +207,7 @@ class Chime:
             sustain_level=1.0,
         )
 
-        # Set default voice overtones
+        # Set voice overtones
         if self._voice == Voice.Bell:
             self._overtones = Overtones.Bell
         elif self._voice == Voice.Perfect:
@@ -257,10 +267,13 @@ class Chime:
     def loudness(self, new_loudness=0.5):
         self._loudness = new_loudness
 
-    def strike(self, root_note=69, amplitude=0):
-        """Strike the chime or bell. The midi root_note integer ranges from 0 to 128.
-        The note_amplitude is a floating point value between 0.0 and 1.0. The note envelope
-        and overtone values are determined by the chime/bell and striker materials."""
+    def strike(self, root_note=49, amplitude=0):
+        """Strike the chime or bell. The note envelope and overtone values are
+        determined by the chime/bell and striker materials.
+        :param int root_note: The root_note MIDI integer value; ranges from
+        0 to 128. Defaults to 49 (A4).
+        :param float amplitude: The amplitude of the note; range 0.0 to 1.0.
+        Defaults to 0.0 (muted)."""
 
         root_note_freq = synthio.midi_to_hz(root_note)
         adjusted_amplitude = amplitude * self._loudness
@@ -289,5 +302,4 @@ class Chime:
         )
 
         self.synth.press(self._notes)
-        # time.sleep(self._attack_time)  # making certain that note isn't released too soon
         self.synth.release(self._notes)
