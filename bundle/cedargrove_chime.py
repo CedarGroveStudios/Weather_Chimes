@@ -11,12 +11,14 @@ Lee Hite, 'Tubular Bell Chimes Design Handbook' for the analysis of tubular
 chime physics and overtones.
 C. McKenzie, T. Schweisinger, and J. Wagner, 'A Mechanical Engineering
 Laboratory Experiment to Investigate the Frequency Analysis of Bells and Chimes
-with Assessment' for the analysis of bell overtones.
+with Assessment' for the analysis of bell overtones;
+Liz Clark, 'Circle of Fifths Euclidean Synth with synthio and CircuitPython'
+for the waveform and noise methods;
+Todd Kurt for fundamentally essential synth hints, tricks, and examples
+(https://github.com/todbot/circuitpython-synthio-tricks).
 
-Special thanks to Liz Clark, 'Circle of Fifths Euclidean Synth with synthio and
-CircuitPython' for the waveform and noise methods.
-Also, thanks to Jeff Epler for the comprehensive design and implementation of
-the amazing CircuitPython synthio module.
+Also, special thanks to Jeff Epler for the comprehensive design and implementation
+of the amazing CircuitPython synthio module.
 
 * Author(s): JG for Cedar Grove Maker Studios
 
@@ -37,7 +39,7 @@ from cedargrove_midi_tools import name_to_note
 
 
 class Voice:
-    """The pre-compiled synth voices. Bell is a single-capped tube
+    """The pre-defined synth voices. Bell is a single-capped tube
     with empirical overtones. Perfect is a dual-capped tube with algorithmically
     generated overtones equal to the length-related harmonics. Tubular is a
     traditional open-ended tube chime with empirical non-harmonic overtones."""
@@ -65,10 +67,10 @@ class Scale:
     Trinity = ["D5", "G5", "A5", "B5", "C6", "D6"]
     Winchester = ["C5", "D5", "E5", "F5", "G5", "A5"]
     StMichaels = ["F5", "G5", "A5", "A#5", "C6", "D6", "E6", "F6"]
-    HappyBirthday = ["C5", "D5", "E5", "F5", "G5", "A5", "A#5", "B5", "C6"]
+    HappyBirthday = ["C6", "D6", "E6", "F6", "G6", "A6", "A#6", "B6", "C7"]
 
     # Other wind chimes measured in-field
-    HarryDavidPear = []  # material = steel, voice = tubular
+    HarryDavidPear = ["F#5", "G#5", "B5", "C6", "E6", "G6"]  # material = steel, voice = tubular
     CeramicTurtles = []  # material = ceramic, voice = bell
     BiPlane = []  # material = copper, voice = tubular
 
@@ -143,8 +145,41 @@ class Chime:
         loudness=0.5,
         debug=False,
     ):
-        """Create the oscillator waveform, note envelope, overtones, scale, and
-        instantiate the synthesizer."""
+        """Create the chime oscillator waveform, note envelope, overtones,
+        scale, and instantiate the synthesizer.
+
+        param: audio, ?: An instantiated audio object to receive the output
+        audio stream, typically an I2S connection, analog DAC output pin, or
+        PWM output pin. No default.
+        param: scale, list: The list of playable chime notes in Scientific
+        Pitch Notation (SPN). Each element of the list is a single SPN string,
+        such as “A#4” for the A# for Bb note in the fourth octave. The
+        Chime.Scale class contains a number of chime scale lists. Defaults to
+        Scale.CNine.
+        param: material, list: A list of chime material note envelope
+        parameters for attack time, attack level, and release time. The
+        Chime.Material class consists of presets for a variety of materials.
+        Defaults to Material.SteelEMT.
+        param: striker, list: A list of striker material note envelope
+        parameter ratios for attack time and attack level. The ratios are used
+        to adjust chime material note envelope properties for a particular
+        striker material. The Chime.Striker class consists of presets for a
+        variety of materials. Defaults to Striker.Metal.
+        param: voice, string: A string representing the pre-defined synth
+        voices. The Chime.Voice class contains presets for Voice.Bell (“bell”,
+        a single-capped tube with empirical overtones), Voice.Perfect
+        (“perfect”, a dual-capped tube with algorithmically generated overtones
+        equal to the length-related harmonics), and Voice.Tubular (“tubular”,
+        a traditional open-ended tube chime with empirical non-harmonic
+        overtones). Defaults to Voice.Tubular.
+        param: scale_offset, int: A positive or negative integer value of note
+        pitch half-steps to offset the pitch of the scale. Defaults to 0 (no
+        scale pitch offset).
+        param: loudness, float: A normalized floating point value for output
+        amplitude, ranging from 0.0 to 1.0. Defaults to 0.5 (one-half volume).
+        param: debug, bool: A boolean value to enable debug print messages.
+        Defaults to False (no debug print messages).
+        """
 
         self._debug = debug
         self._voice = voice
@@ -200,17 +235,31 @@ class Chime:
 
     @property
     def scale(self):
-        """Returns the note scale list."""
+        """The chime scale list in SPN."""
         return self._scale
+
+    @scale.setter
+    def scale(self, new_scale=Scale.CNine):
+        self._scale = []
+        for index, note in enumerate(new_scale):
+            self._scale.append(
+                min(max(name_to_note(note) + self._scale_offset, 0), 127)
+            )
+        if self._debug:
+            print(f"scale={new_scale} self._scale={self._scale} list created")
 
     @property
     def loudness(self):
-        """Returns the current loudness value."""
+        """The current loudness value."""
         return self._loudness
+
+    @loudness.setter
+    def loudness(self, new_loudness=0.5):
+        self._loudness = new_loudness
 
     def strike(self, root_note=69, amplitude=0):
         """Strike the chime or bell. The midi root_note integer ranges from 0 to 128.
-        The note_amplitude is a floating point value between 0 and 1.0. The note envelope
+        The note_amplitude is a floating point value between 0.0 and 1.0. The note envelope
         and overtone values are determined by the chime/bell and striker materials."""
 
         root_note_freq = synthio.midi_to_hz(root_note)

@@ -67,9 +67,9 @@ WIFI_DEBUG = False
 BELLS_DEBUG = False
 CHIME_DEBUG = False
 
-LOUDNESS = 0.4
-SCALE = Scale.HavaNegila
-SCALE_OFFSET_1 = 5
+LOUDNESS = 0.8
+SCALE_1 = Scale.HarryDavidPear
+SCALE_OFFSET_1 = 0
 VOICE_1 = Voice.Tubular
 MATERIAL_1 = Material.SteelEMT
 STRIKER_1 = Striker.Metal
@@ -102,12 +102,12 @@ mixer = audiomixer.Mixer(
     sample_rate=11020, buffer_size=4096, voice_count=1, channel_count=1
 )
 audio_output.play(mixer)
-mixer.voice[0].level = 1.0
-# mixer.voice[1].level = 1.0
+mixer.voice[0].level = 0.8
+# mixer.voice[1].level = 0.4
 
 chime = Chime(
     mixer.voice[0],
-    scale=SCALE,
+    scale=SCALE_1,
     voice=VOICE_1,
     material=MATERIAL_1,
     striker=STRIKER_1,
@@ -115,7 +115,17 @@ chime = Chime(
     loudness=LOUDNESS,
     debug=CHIME_DEBUG,
 )
-# bells = Chime(mixer.voice[1], scale=SCALE, voice=VOICE_2, material=MATERIAL_2, striker=STRIKER_2, scale_offset=SCALE_OFFSET_2, loudness=LOUDNESS, debug=BELLS_DEBUG)
+
+"""bells = Chime(
+    mixer.voice[1],
+    scale=SCALE_2,
+    voice=VOICE_2,
+    material=MATERIAL_1,
+    striker=STRIKER_1,
+    scale_offset=SCALE_OFFSET_1,
+    loudness=LOUDNESS,
+    debug=CHIME_DEBUG,
+)"""
 
 # Sequentially play all the notes in the scale
 for index, note in enumerate(chime.scale):
@@ -125,20 +135,10 @@ for index, note in enumerate(chime.scale):
 time.sleep(1)
 
 # Define task parameters and set to initial state
-TASK_0_TITLE = "heartbeat"
-TASK_0_CYCLE = 2  # 2-second cycle (seconds)
-TASK_0_OFFSET = 0  # 0 seconds past the hour
-task_0_state = State.FIRST_RUN
-
 TASK_1_TITLE = "display clock"
 TASK_1_CYCLE = 1 * 60  # 1-minute cycle (seconds)
 TASK_1_OFFSET = 0  # 0 seconds past the hour
 task_1_state = State.FIRST_RUN
-
-TASK_2_TITLE = "play wind-related chimes"
-TASK_2_CYCLE = 3  # 11-second cycle (seconds)
-TASK_2_OFFSET = 0  # 0 seconds past the hour
-task_2_state = State.FIRST_RUN
 
 TASK_3_TITLE = "update clock and weather"
 TASK_3_CYCLE = 20 * 60  # 20-minute cycle (seconds)
@@ -156,19 +156,6 @@ note_amplitude = map_range(corr_wifi.wind_speed, 0, 100, 0.6, 1.0)
 while True:
     current_time = time.time()
 
-    # TASK 0 (HEARTBEAT)
-    if current_time % TASK_0_CYCLE == TASK_0_OFFSET or task_0_state == State.FIRST_RUN:
-        if task_0_state in (State.IDLE, State.FIRST_RUN):
-            # ### TASK 0 START
-            led.value = True  # Heartbeat: flash LED when idle
-            time.sleep(0.1)
-            led.value = False
-            # ### TASK 0 END
-
-            task_0_state = State.DONE
-    else:
-        task_0_state = State.IDLE
-
     # ### TASK 1 ###
     if current_time % TASK_1_CYCLE == TASK_1_OFFSET or task_1_state == State.FIRST_RUN:
         if task_1_state in (State.IDLE, State.FIRST_RUN):
@@ -183,29 +170,6 @@ while True:
             task_1_state = State.DONE
     else:
         task_1_state = State.IDLE
-
-    # ### TASK 2 ###
-    if current_time % TASK_2_CYCLE == TASK_2_OFFSET or task_2_state == State.FIRST_RUN:
-        if task_2_state in (State.IDLE, State.FIRST_RUN):
-            # TASK 2 START
-            print(
-                f"Task 2: {TASK_2_TITLE}: {time.localtime()[3]:02.0f}:{time.localtime()[4]:02.0f}"
-            )
-
-            # Play wind-related chimes
-            number_to_play = int(map_range(corr_wifi.wind_speed, 0, 50, 5, 30))
-            for count in range(random.randrange(number_to_play)):
-                chime.strike(random.choice(chime.scale), note_amplitude)
-                time.sleep(
-                    random.randrange(1, 3)
-                    * map_range(corr_wifi.wind_speed, 0, 50, 0.6, 0)
-                )
-
-            # TASK 2 END
-
-            task_2_state = State.DONE
-    else:
-        task_2_state = State.IDLE
 
     # ### TASK 3 ###
     if current_time % TASK_3_CYCLE == TASK_3_OFFSET or task_3_state == State.FIRST_RUN:
@@ -235,12 +199,51 @@ while True:
                     wind_speed_color = color[1]
             pixel[0] = wind_speed_color
 
-            note_amplitude = map_range(corr_wifi.wind_speed, 0, 100, 0.6, 1.0)
-
-            chime.strike(chime.scale[0], note_amplitude)
-
             # TASK 3 END
 
             task_3_state = State.DONE
     else:
         task_3_state = State.IDLE
+
+    """Play a chime note sequence in proportion to wind speed.
+    Builds an index list of notes to play (note sequence). It's assumed that
+    the chime tubes are mounted in a circle and that no more than half the
+    tubes could sound when the striker moves due to wind.
+    The initial chime tube note (chime_index[0]) is selected randomly from
+    chime.scale. The inital struck note will be followed by up adjacent notes
+    either to the right or left as determined by the random direction variable.
+    The playable note indicies are contained in the chime_index list.
+    Note amplitude and the delay between note sequences is proportional to
+    the wind speed."""
+
+    led.value = True  # Busy playing a note sequence
+
+    """Populate the chime_index list with the inital note then add the
+    additional notes."""
+    chime_index = []
+    chime_index.append(random.randrange(len(chime.scale)))
+
+    direction = random.choice((-1, 1))
+    for count in range(1, len(chime.scale) // 2):
+        chime_index.append((chime_index[count-1] + direction) % len(chime.scale))
+
+    """Randomly select the number of notes to play in the sequence based on the
+    length of the chime_index list."""
+    notes_to_play = random.randrange(len(chime_index) + 1)
+
+    """Play the note sequence with a random delay between each."""
+    note_amplitude = map_range(corr_wifi.wind_speed, 0, 50, 0.4, 1.0)
+    for count in range(notes_to_play):
+        chime.strike(chime.scale[chime_index[count]], note_amplitude)
+        time.sleep(random.randrange(10, 60) * 0.01)  # random delay of 0.10 to 0.50 seconds
+
+    led.value = False
+
+    """Delay the next note sequence inversely based on wind speed plus a
+    random interval."""
+    if corr_wifi.wind_speed < 1:
+        time.sleep(30)
+    else:
+        time.sleep(map_range(corr_wifi.wind_speed, 0, 50, 2.0, 0.01) + (random.random()/2))
+
+
