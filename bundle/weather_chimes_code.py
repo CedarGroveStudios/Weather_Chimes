@@ -4,7 +4,7 @@
 """
 `weather_chimes_code`
 ===============================================================================
-IOT-connected windless garden chimes for the ESP-32-S2 Feather.
+IoT-connected windless garden chimes for the Feather S2.
 
 * Author(s): JG for Cedar Grove Maker Studios
 
@@ -12,9 +12,11 @@ Implementation Notes
 --------------------
 
 **Hardware:**
-* ESP-32-S2 Feather
+* Feather S2 (ESP32-S2)
 
 **Software and Dependencies:**
+* CedarGrove CircuitPython_Chime:
+  https://github.com/CedarGroveStudios/CircuitPython_Chime
 * Adafruit CircuitPython firmware for the supported boards:
   https://circuitpython.org/downloads
 """
@@ -190,21 +192,20 @@ while True:
     else:
         task_3_state = State.IDLE
 
-    """Play a chime note sequence in proportion to wind speed.
-    Builds an index list of notes to play (note sequence). It's assumed that
-    the chime tubes are mounted in a circle and that no more than half the
-    tubes could sound when the striker moves due to wind.
-    The initial chime tube note (chime_index[0]) is selected randomly from
-    chime.scale. The inital struck note will be followed by up adjacent notes
+    """Play a randomized chime note sequence in proportion to wind speed.
+    It's assumed that the chime tubes are mounted in a circle and that no more
+    than half the tubes will sound when the striker moves due to wind. The
+    initial chime tube note (chime_index[0]) is selected randomly from
+    chime.scale. The initial struck note will be followed by adjacent notes
     either to the right or left as determined by the random direction variable.
-    The playable note indicies are contained in the chime_index list.
-    Note amplitude and the delay between note sequences is proportional to
+    The playable note indices are contained in the chime_index list. Chime note
+    amplitude and the delay between note sequences is proportional to
     the wind speed."""
 
     led.value = True  # Busy playing a note sequence
 
-    """Populate the chime_index list with the inital note then add the
-    additional notes."""
+    """Populate the chime_index list with the initial note then add the
+    additional adjacent notes."""
     chime_index = []
     chime_index.append(random.randrange(len(chime.scale)))
 
@@ -212,8 +213,7 @@ while True:
     for count in range(1, len(chime.scale) // 2):
         chime_index.append((chime_index[count-1] + direction) % len(chime.scale))
 
-    """Randomly select the number of notes to play in the sequence based on the
-    length of the chime_index list."""
+    """Randomly select the number of notes to play in the sequence."""
     notes_to_play = random.randrange(len(chime_index) + 1)
 
     """Play the note sequence with a random delay between each."""

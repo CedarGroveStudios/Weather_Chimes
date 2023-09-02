@@ -5,17 +5,18 @@
 `cedargrove_chime`
 ===============================================================================
 A CircuitPython class for generating wind chime and bell sounds using synthio.
+https://github.com/CedarGroveStudios/CircuitPython_Chime
 
 Acknowledgement and thanks to:
-Lee Hite, 'Tubular Bell Chimes Design Handbook' for the analysis of tubular
-chime physics and overtones.
-C. McKenzie, T. Schweisinger, and J. Wagner, 'A Mechanical Engineering
-Laboratory Experiment to Investigate the Frequency Analysis of Bells and Chimes
-with Assessment' for the analysis of bell overtones;
-Liz Clark, 'Circle of Fifths Euclidean Synth with synthio and CircuitPython'
-for the waveform and noise methods;
-Todd Kurt for fundamentally essential synth hints, tricks, and examples
-(https://github.com/todbot/circuitpython-synthio-tricks).
+* Lee Hite, 'Tubular Bell Chimes Design Handbook' for the analysis of tubular
+  chime physics and overtones.
+* C. McKenzie, T. Schweisinger, and J. Wagner, 'A Mechanical Engineering
+  Laboratory Experiment to Investigate the Frequency Analysis of Bells and Chimes
+  with Assessment' for the analysis of bell overtones;
+* Liz Clark, 'Circle of Fifths Euclidean Synth with synthio and CircuitPython'
+  for the waveform and noise methods;
+* Todd Kurt for fundamentally essential synth hints, tricks, and examples
+  (https://github.com/todbot/circuitpython-synthio-tricks).
 
 Also, special thanks to Jeff Epler for the comprehensive design and implementation
 of the amazing CircuitPython synthio module.
@@ -24,10 +25,6 @@ of the amazing CircuitPython synthio module.
 
 Implementation Notes
 --------------------
-
-**Hardware:**
-* ESP-32-S2 Feather
-
 **Software and Dependencies:**
 * CedarGrove CircuitPython_MIDI_Tools:
   https://github.com/CedarGroveStudios/CircuitPython_MIDI_Tools
@@ -73,16 +70,11 @@ class Scale:
     HappyBirthday = ["C6", "D6", "E6", "F6", "G6", "A6", "A#6", "B6", "C7"]
 
     # Other wind chimes measured in-field
-    HarryDavidPear = [
-        "F#5",
-        "G#5",
-        "B5",
-        "C6",
-        "E6",
-        "G6",
-    ]  # material = steel, voice = tubular
-    CeramicTurtles = []  # material = ceramic, voice = bell
-    BiPlane = []  # material = copper, voice = tubular
+    HarryDavidPear = ["F#5", "G#5", "B5", "C6", "E6", "G6"]  # tubular steel
+    CeramicTurtles = []  # ceramic bells
+    CeramicBells = []  # ceramic bells
+    Biplane = []  # tubular copper
+    SandCast = []  # brass bells
 
 
 class Material:
@@ -98,7 +90,7 @@ class Material:
 
 
 class Striker:
-    """The attack time and attack level ratio for various striker materials."""
+    """The attack time and attack level ratios for various striker materials."""
 
     Metal = [0.00, 1.0]
     Plexiglas = [0.01, 1.0]
@@ -107,10 +99,11 @@ class Striker:
 
 
 class Overtones:
-    """The voice overtone frequency and relative amplitude factors of each.
-    Root note is Overtones.Chime[0]; for example, the primary overtone is
-    Overtones.Chime[1]. To avoid note distortion, the sum of overtone amplitude
-    factors should equal 1.0 or less."""
+    """The voice overtone frequency factors and relative amplitude factors of
+    each. The root note is Overtones.Chime[0]. Other overtones follow in the
+    list. For example, the primary overtone is Overtones.Chime[1]. To avoid
+    note distortion, the sum of overtone amplitude factors should equal 1.0
+    or less."""
 
     """Bell overtones were measured empirically but fall close to the
     theoretical single-capped tubular harmonics where overtones are the
@@ -128,7 +121,7 @@ class Overtones:
         (7.00, 0.0),
     ]
 
-    """Tubular overtones were measured empirically; they are not equal to
+    """Tubular overtones were measured empirically. They are not equal to
     theoretical dual-capped tubular overtones or harmonics."""
     Tubular = [
         (1.00, 0.6),
@@ -142,7 +135,7 @@ class Overtones:
 
 
 class Chime:
-    """Simple sine wave chime or bell sound using synthio."""
+    """A synthesizer for wind chime or bell sounds using synthio."""
 
     def __init__(
         self,
@@ -156,32 +149,31 @@ class Chime:
         debug=False,
     ):
         """Create the chime oscillator waveform, note envelope, overtones,
-        scale, and instantiate the synthesizer.
+        scale, and to instantiate the synthesizer.
 
         :param bus audio: An instantiated audio object to receive the output
         audio stream, typically an I2S connection, analog DAC output pin, or
         PWM output pin. No default.
         :param list scale: The list of playable chime notes in Scientific
-        Pitch Notation (SPN). Each element of the list is a single SPN string,
-        such as “A#4” for the A# for Bb note in the fourth octave. The
-        Chime.Scale class contains a number of chime scale lists. Defaults to
-        Scale.CNine.
-        :param list material: A list of chime material note envelope
-        parameters for attack time, attack level, and release time. The
-        Chime.Material class consists of presets for a variety of materials.
-        Defaults to Material.SteelEMT.
-        :param list striker: A list of striker material note envelope
-        parameter ratios for attack time and attack level. The ratios are used
-        to adjust chime material note envelope properties for a particular
-        striker material. The Chime.Striker class consists of presets for a
-        variety of materials. Defaults to Striker.Metal.
-        :param str voice: A string representing the pre-defined synth
-        voices. The Chime.Voice class contains presets for Voice.Bell (“bell”,
-        a single-capped tube with empirical overtones), Voice.Perfect
-        (“perfect”, a dual-capped tube with algorithmically generated overtones
-        equal to the length-related harmonics), and Voice.Tubular (“tubular”,
-        a traditional open-ended tube chime with empirical non-harmonic
-        overtones). Defaults to Voice.Tubular.
+        Pitch Notation (SPN). Each element of the scale list is a single SPN
+        string such as “A#4” for the fourth-octave A# (Bb) note. The
+        Chime.Scale class contains a collection of chime scale lists. Defaults
+        to Scale.CNine.
+        :param list material: A list of note envelope parameters (attack time,
+        attack level, release time) based on the chime construction material.
+        The Chime.Material class consists of presets for a variety of
+        materials. Defaults to Material.SteelEMT.
+        :param list striker: A list of note envelope parameter ratios (attack
+        time, attack level) based on the striker construction material. The
+        ratios are used to adjust chime note envelope properties. The
+        Chime.Striker class consists of presets for a variety of materials.
+        Defaults to Striker.Metal.
+        :param str voice: A string representing the pre-defined synth voices.
+        The Chime.Voice class contains presets for: Voice.Bell, a single-capped
+        tube with empirical overtones; Voice.Perfect, a dual-capped tube with
+        algorithmically generated overtones equal to the length-related
+        harmonics, and Voice.Tubular, a traditional open-ended tube chime with
+        empirical non-harmonic overtones. Defaults to Voice.Tubular.
         :param int scale_offset: A positive or negative integer value of note
         pitch half-steps to offset the pitch of the scale. Defaults to 0 (no
         scale pitch offset).

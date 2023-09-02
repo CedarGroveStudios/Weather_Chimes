@@ -4,14 +4,15 @@
 """
 `cedargrove_chime_simpletest`
 ===============================================================================
-A test of the cedargrove_chime synthio voice module.
+A test of the cedargrove_chime wind chime synthesizer module.
 
 * Author(s): JG for Cedar Grove Maker Studios
 
 Implementation Notes
 --------------------
-
 **Software and Dependencies:**
+* CedarGrove CircuitPython_Chime:
+  https://github.com/CedarGroveStudios/CircuitPython_Chime
 * Adafruit CircuitPython firmware for the supported boards:
   https://circuitpython.org/downloads
 """
@@ -33,7 +34,7 @@ mixer = audiomixer.Mixer(
 audio_output.play(mixer)
 mixer.voice[0].level = 1.0
 
-# Instantiate the chime synth with mostly default parameters
+# Instantiate the chime synthesizer with mostly default parameters
 chime = Chime(mixer.voice[0], scale=Scale.HarryDavidPear)
 
 # Play scale notes sequentially
@@ -43,7 +44,7 @@ for index, note in enumerate(chime.scale):
 time.sleep(1)
 
 while True:
-    # Play randomly
+    # Play scale notes randomly
     for count in range(random.randrange(10)):
         chime.strike(random.choice(chime.scale), 1)
         time.sleep(random.randrange(1, 3) * 0.6)
