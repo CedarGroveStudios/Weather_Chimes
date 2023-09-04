@@ -68,11 +68,10 @@ class WeatherChimesWiFi:
         # Initialize network time connection and update local time
         self.ntp = adafruit_ntp.NTP(self.pool, tz_offset=-7)
         self.update_local_time()
-        self.printd("NTP local time conection initialized; local time updated")
+        self.printd("NTP local time connection initialized; local time updated")
 
         # Set location and units for weather data and update conditions
         self.UNITS = "imperial"
-        # LOCATION = SECRETS["location"]
         LOCATION = os.getenv("location")
         self.printd("Getting weather for {}".format(LOCATION))
 

@@ -127,9 +127,9 @@ TASK_1_CYCLE = 1 * 60  # 1-minute cycle (seconds)
 TASK_1_OFFSET = 0  # 0 seconds past the hour
 task_1_state = State.FIRST_RUN
 
-TASK_3_TITLE = "update clock and weather"
-TASK_3_CYCLE = 20 * 60  # 20-minute cycle (seconds)
-TASK_3_OFFSET = 12 * 60  # 12 minutes past the hour (seconds)
+TASK_2_TITLE = "update clock and weather"
+TASK_2_CYCLE = 20 * 60  # 20-minute cycle (seconds)
+TASK_2_OFFSET = 12 * 60  # 12 minutes past the hour (seconds)
 task_3_state = State.FIRST_RUN
 
 print()
@@ -137,8 +137,6 @@ print("=" * 10)
 print()
 
 pixel[0] = 0x000000  # Clear for wind speed colors
-
-note_amplitude = map_range(corr_wifi.wind_speed, 0, 100, 0.6, 1.0)
 
 while True:
     current_time = time.time()
@@ -159,11 +157,11 @@ while True:
         task_1_state = State.IDLE
 
     # ### TASK 3 ###
-    if current_time % TASK_3_CYCLE == TASK_3_OFFSET or task_3_state == State.FIRST_RUN:
+    if current_time % TASK_2_CYCLE == TASK_2_OFFSET or task_3_state == State.FIRST_RUN:
         if task_3_state in (State.IDLE, State.FIRST_RUN):
             # TASK 3 START
             print(
-                f"\nTask 3: {TASK_3_TITLE}: {time.localtime()[3]:02.0f}:{time.localtime()[4]:02.0f}"
+                f"\nTask 3: {TASK_2_TITLE}: {time.localtime()[3]:02.0f}:{time.localtime()[4]:02.0f}"
             )
 
             # Read and update the local time
@@ -188,9 +186,9 @@ while True:
 
             # TASK 3 END
 
-            task_3_state = State.DONE
+            task_2_state = State.DONE
     else:
-        task_3_state = State.IDLE
+        task_2_state = State.IDLE
 
     """Play a randomized chime note sequence in proportion to wind speed.
     It's assumed that the chime tubes are mounted in a circle and that no more
@@ -203,6 +201,7 @@ while True:
     the wind speed."""
 
     led.value = True  # Busy playing a note sequence
+    note_amplitude = map_range(corr_wifi.wind_speed, 0, 100, 0.6, 1.0)
 
     """Populate the chime_index list with the initial note then add the
     additional adjacent notes."""
@@ -211,7 +210,7 @@ while True:
 
     direction = random.choice((-1, 1))
     for count in range(1, len(chime.scale) // 2):
-        chime_index.append((chime_index[count-1] + direction) % len(chime.scale))
+        chime_index.append((chime_index[count - 1] + direction) % len(chime.scale))
 
     """Randomly select the number of notes to play in the sequence."""
     notes_to_play = random.randrange(len(chime_index) + 1)
@@ -220,7 +219,9 @@ while True:
     note_amplitude = map_range(corr_wifi.wind_speed, 0, 50, 0.4, 1.0)
     for count in range(notes_to_play):
         chime.strike(chime.scale[chime_index[count]], note_amplitude)
-        time.sleep(random.randrange(10, 60) * 0.01)  # random delay of 0.10 to 0.50 seconds
+        time.sleep(
+            random.randrange(10, 60) * 0.01
+        )  # random delay of 0.10 to 0.50 seconds
 
     led.value = False
 
@@ -229,6 +230,6 @@ while True:
     if corr_wifi.wind_speed < 1:
         time.sleep(30)
     else:
-        time.sleep(map_range(corr_wifi.wind_speed, 0, 50, 2.0, 0.01) + (random.random()/2))
-
-
+        time.sleep(
+            map_range(corr_wifi.wind_speed, 0, 50, 2.0, 0.01) + (random.random() / 2)
+        )
