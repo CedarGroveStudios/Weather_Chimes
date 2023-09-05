@@ -19,7 +19,7 @@ Introduction
 
 A CircuitPython project for "windless" electronic chimes that play in accordance with the outdoor wind speed.
 
-.. image:: https://github.com/CedarGroveStudios/CircuitPython_AD5245/blob/master/media/AD5245_breakout_for_fritzing.png
+.. image:: https://github.com/CedarGroveStudios/Weather_Chimes/blob/main/media/Weather_Chimes_glamour.png
 
 The `Weather Chimes` project connects to the Adafruit NTP service for network time and to OpenWeatherMap.org for wind
 speed data. The wind speed data is retrieved every twenty minutes and is used to adjust wind chime playback
