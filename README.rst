@@ -37,12 +37,6 @@ The WiFi class takes care of all the networking details for connecting and retri
 and weather data API. It also provide helpers for updating and retrieving time and weather as well as properties
 for including the essential time and wind speed.
 
-Achieving a realistic pseudo-random chime playback proportional to wind speed involves two factors. First, the
-amplitude (audio volume) of the chime notes is directly proportional to wind speed, varying from 40% to 100%
-amplitude. Next, the delay between clusters of notes is inversely proportional to wind speed; the delay time interval
-ranges proportionally from 2 seconds to 10 milliseconds. A random delay of up to 0.5 second is added to the
-calculated delay time interval.
-
 It's assumed that the chime tubes are mounted in a circle and that no more than half the tubes will sound when
 the striker moves due to wind. The ``Chime.strike`` method randomly selects the first note to play from the
 chime scale and randomly determines the number of notes to play. The initial note will be followed by a cluster
@@ -50,6 +44,12 @@ of adjacent notes either to the right or left as determined by a random directio
 notes to play, each played in sequence after a random delay that ranges from 0.1 to 0.5 seconds. This algorithm
 mimics the observed behavior of the chime striker since it usually moves away from the first struck tube,
 hitting a few adjacent chime tubes.
+
+Achieving a realistic pseudo-random chime playback proportional to wind speed involves two factors. First, the
+amplitude (audio volume) of the chime notes is directly proportional to wind speed, varying from 40% to 100%
+amplitude. Next, the delay between clusters of notes is inversely proportional to wind speed; the delay time interval
+ranges proportionally from 2 seconds to 10 milliseconds. A random delay of up to 0.5 second is added to the
+calculated delay time interval.
 
 The ``CircuitPython_Chime`` class does the hard work of building a ``synthio`` object with all the overtones and
 ADSR envelope characteristics of a set of tubular chimes. The class contains a collection of selectable musical
