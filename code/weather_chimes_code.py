@@ -201,7 +201,6 @@ while True:
     the wind speed."""
 
     led.value = True  # Busy playing a note sequence
-    note_amplitude = map_range(corr_wifi.wind_speed, 0, 100, 0.6, 1.0)
 
     """Populate the chime_index list with the initial note then add the
     additional adjacent notes."""
