@@ -130,7 +130,7 @@ task_1_state = State.FIRST_RUN
 TASK_2_TITLE = "update clock and weather"
 TASK_2_CYCLE = 20 * 60  # 20-minute cycle (seconds)
 TASK_2_OFFSET = 12 * 60  # 12 minutes past the hour (seconds)
-task_3_state = State.FIRST_RUN
+task_2_state = State.FIRST_RUN
 
 print()
 print("=" * 10)
@@ -156,10 +156,10 @@ while True:
     else:
         task_1_state = State.IDLE
 
-    # ### TASK 3 ###
-    if current_time % TASK_2_CYCLE == TASK_2_OFFSET or task_3_state == State.FIRST_RUN:
-        if task_3_state in (State.IDLE, State.FIRST_RUN):
-            # TASK 3 START
+    # ### TASK 2 ###
+    if current_time % TASK_2_CYCLE == TASK_2_OFFSET or task_2_state == State.FIRST_RUN:
+        if task_2_state in (State.IDLE, State.FIRST_RUN):
+            # TASK 2 START
             print(
                 f"\nTask 3: {TASK_2_TITLE}: {time.localtime()[3]:02.0f}:{time.localtime()[4]:02.0f}"
             )
@@ -184,7 +184,7 @@ while True:
                     wind_speed_color = color[1]
             pixel[0] = wind_speed_color
 
-            # TASK 3 END
+            # TASK 2 END
 
             task_2_state = State.DONE
     else:
