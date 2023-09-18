@@ -197,7 +197,7 @@ while True:
     chime.scale. The initial struck note will be followed by adjacent notes
     either to the right or left as determined by the random direction variable.
     The playable note indices are contained in the chime_index list. Chime note
-    amplitude and the delay between note sequences is proportional to
+    amplitude and the delay between note sequences are proportional to
     the wind speed."""
 
     led.value = True  # Busy playing a note sequence
