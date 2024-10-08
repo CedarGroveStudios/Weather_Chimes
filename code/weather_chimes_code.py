@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 JG for Cedar Grove Maker Studios
+# SPDX-FileCopyrightText: Copyright (c) 2024 JG for Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
 """
@@ -27,7 +27,7 @@ import board
 import digitalio
 import random
 from simpleio import map_range
-import adafruit_dotstar
+import neopixel
 from weather_chimes_wifi import WeatherChimesWiFi
 
 import audiobusio
@@ -66,39 +66,41 @@ class WindColors:
 
 
 WIFI_DEBUG = False
+WIFI_OPERATION = False  # Set to True for WiFi operation; False for random
 
-LOUDNESS = 0.8
+LOUDNESS = 0.75
 SCALE_1 = Scale.HarryDavidPear
 
 # Specify LED brightness level
-LED_BRIGHT = 0.15
+LED_BRIGHT = 0.02
 
 # Initialize cpu temperature sensor
 corr_cpu_temp = microcontroller.cpu.temperature
 
-# Initialize DotStar
-pixel = adafruit_dotstar.DotStar(
-    board.APA102_SCK, board.APA102_MOSI, 1, brightness=LED_BRIGHT, auto_write=True
+# Initialize NeoPixel
+pixel = neopixel.NeoPixel(
+    board.NEOPIXEL, 1, brightness=LED_BRIGHT, auto_write=True
 )
+pixel.brightness = LED_BRIGHT
 pixel[0] = 0xFFFF00  # Initializing (yellow)
 
 # Initialize busy LED
-led = digitalio.DigitalInOut(board.LED)
-led.direction = digitalio.Direction.OUTPUT
-led.value = True
+#led = digitalio.DigitalInOut(board.LED)
+#led.direction = digitalio.Direction.OUTPUT
+#led.value = True
 
 # Instantiate wifi and sensor classes
-corr_wifi = WeatherChimesWiFi(debug=WIFI_DEBUG)
+corr_wifi = WeatherChimesWiFi(debug=WIFI_DEBUG, wifi_mode=WIFI_OPERATION)
 
 # Instantiate chime synthesizer
 audio_output = audiobusio.I2SOut(
-    bit_clock=board.D12, word_select=board.D9, data=board.D6
+    bit_clock=board.A2, word_select=board.A1, data=board.A0
 )
 mixer = audiomixer.Mixer(
     sample_rate=11020, buffer_size=4096, voice_count=1, channel_count=1
 )
 audio_output.play(mixer)
-mixer.voice[0].level = 0.8
+mixer.voice[0].level = LOUDNESS
 # mixer.voice[1].level = 0.4
 
 chime = Chime(
@@ -197,10 +199,10 @@ while True:
     chime.scale. The initial struck note will be followed by adjacent notes
     either to the right or left as determined by the random direction variable.
     The playable note indices are contained in the chime_index list. Chime note
-    amplitude and the delay between note sequences are proportional to
+    amplitude and the delay between note sequences is proportional to
     the wind speed."""
 
-    led.value = True  # Busy playing a note sequence
+    pixel[0] = 0xFF0000  # Busy playing a note sequence
 
     """Populate the chime_index list with the initial note then add the
     additional adjacent notes."""
@@ -222,7 +224,7 @@ while True:
             random.randrange(10, 60) * 0.01
         )  # random delay of 0.10 to 0.50 seconds
 
-    led.value = False
+    pixel[0] = wind_speed_color
 
     """Delay the next note sequence inversely based on wind speed plus a
     random interval."""

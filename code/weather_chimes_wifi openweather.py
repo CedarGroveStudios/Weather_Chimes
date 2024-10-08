@@ -18,7 +18,6 @@ Implementation Notes
   https://circuitpython.org/downloads
 """
 
-import gc
 import os
 import time
 import random
@@ -82,7 +81,13 @@ class WeatherChimesWiFi:
             # Set up the URL for fetching weather data
             self.printd("Set up the URL for fetching weather data")
             self.DATA_SOURCE = (
-                "http://api.weather.gov/stations/KPSC/observations/latest"
+                "http://api.openweathermap.org/data/2.5/weather?q="
+                + LOCATION
+                + "&units="
+                + self.UNITS
+                + "&mode=json"
+                + "&appid="
+                + os.getenv("openweather_token")
             )
             self.update_weather()
 
@@ -98,9 +103,36 @@ class WeatherChimesWiFi:
             self._debug = new_state
 
     @property
+    def temperature(self):
+        """The latest outdoor temperature."""
+        return self._weather_temp_f
+
+    @property
+    def humidity(self):
+        """The latest outdoor humidity value."""
+        return self._weather_humid
+
+    @property
     def wind_speed(self):
         """The latest outdoor wind speed value."""
         return self._weather_wind_speed
+
+    @property
+    def wind_direction(self):
+        """The latest outdoor wind direction value."""
+        return ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][
+            int(((self._weather_wind_direction + 22.5) % 360) / 45)
+        ]
+
+    @property
+    def wind_gusts(self):
+        """The latest outdoor wind gusts value."""
+        return self._weather_wind_gusts
+
+    @property
+    def description(self):
+        """The latest weather description."""
+        return self._weather_desc
 
     def printd(self, text=""):
         """Print text if debug is True."""
@@ -122,7 +154,6 @@ class WeatherChimesWiFi:
         """Fetch and update the local weather conditions from OpenWeatherMap
         or insert random values if wifi_mode is False."""
         self.printd("Fetch and Update Weather")
-        gc.collect()
 
         if self._wifi_mode:
             # Fetch weather data from OpenWeatherMap API
@@ -138,13 +169,36 @@ class WeatherChimesWiFi:
 
             # Extract temperature and weather condition data from API response
             if response is not None:
-                self._weather_wind_speed = round(response.json()["properties"]["windSpeed"]["value"], 0)
-                response = None  # Clear the response memory buffer
-                gc.collect()
+                self._weather_temp_f = round(response.json()["main"]["temp"], 1)
+                self._weather_humid = round(response.json()["main"]["humidity"], 1)
+
+                self._weather_wind_speed = round(response.json()["wind"]["speed"], 0)
+
+                try:
+                    self._weather_wind_gusts = round(response.json()["wind"]["gust"], 0)
+                except:
+                    self._weather_wind_gusts = 0  # No wind gust speed data (no gusts?)
+
+                self._weather_wind_direction = round(response.json()["wind"]["deg"], 0)
+
+                self._weather_desc = (
+                    response.json()["weather"][0]["main"]
+                    + ": "
+                    + response.json()["weather"][0]["description"]
+                )
         else:
+            self.UNITS = "imperial"
+            self._weather_temp_f = 72
+            self._weather_humid = 50
             self._weather_wind_speed = random.randrange(1, 10)
-            self.printd("RANDOM")
+            self._weather_wind_gusts = random.randrange(1, 10)
+            self._weather_wind_direction = random.randrange(0, 359)
+            self._weather_desc = "(random)"
 
 
+        self.printd(f"Weather Temp: {self._weather_temp_f} F ({self.UNITS})")
+        self.printd(f"Weather Humidity: {self._weather_humid} %")
         self.printd(f"Weather Wind Speed: {self._weather_wind_speed}mph")
-
+        self.printd(f"Weather Wind Gusts: {self._weather_wind_gusts}mph")
+        self.printd(f"Weather Wind Direction: {self._weather_wind_direction}")
+        self.printd(f"Weather Description: {self._weather_desc}")
